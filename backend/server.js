@@ -13,12 +13,17 @@ const authRoutes = require("./routes/authRoutes");
 
 const appointmentRoutes = require("./routes/appointmentRoutes");
 
+const recordRoutes = require("./routes/recordRoutes");
+
+
+
 
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/records", recordRoutes);
 app.use("/api/auth", authRoutes);
 
 
