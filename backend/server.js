@@ -15,6 +15,7 @@ const appointmentRoutes = require("./routes/appointmentRoutes");
 
 const recordRoutes = require("./routes/recordRoutes");
 
+const adminRoutes = require("./routes/adminRoutes");
 
 
 
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/records", recordRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 
