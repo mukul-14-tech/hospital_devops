@@ -1,31 +1,41 @@
-# 🏥 Hospital Appointment & Patient Record System (Backend)
-
-## 📌 Project Overview
-
-This project is a backend system for managing hospital operations such as user authentication and appointment booking.
-
-It allows:
-
-* Patients to register and book appointments
-* Doctors to view their appointments
-* Secure authentication using JWT
-* Data storage using MongoDB
+# 🏥 Hospital Appointment & Patient Health Record System (DevOps Project)
 
 ---
 
-## 🚀 Features Implemented (Day 1–3)
+## 📌 Project Overview
+
+This is a full-stack **Hospital Management System** with DevOps integration.
+
+It allows:
+
+* Patients to book appointments and upload medical reports
+* Doctors to view appointments and add prescriptions
+* Admin to manage doctors, users, and system analytics
+
+The project also includes:
+
+* Docker containerization
+* CI/CD readiness (Jenkins integration coming next)
+
+---
+
+## 🚀 Features Implemented (Day 1–10)
 
 ### 🔐 Authentication System
 
 * User Registration (Patient / Doctor / Admin)
-* User Login with JWT Token
+* Login with JWT authentication
 * Password hashing using bcrypt
 
-### 👨‍⚕️ Role-Based Users
+---
 
-* Patient
-* Doctor
-* Admin
+### 👨‍⚕️ Role-Based System
+
+* Patient → Book appointment, upload reports
+* Doctor → View appointments, add prescriptions
+* Admin → Manage users, add doctors, view stats
+
+---
 
 ### 📅 Appointment System
 
@@ -33,83 +43,169 @@ It allows:
 * View appointments (Patient)
 * View appointments (Doctor)
 
-### 🛡 Protected Routes
+---
 
-* JWT-based middleware
-* Only authenticated users can access APIs
+### 🏥 EHR (Electronic Health Records)
+
+* Upload report (URL-based for now)
+* Add prescription (Doctor)
+* View patient medical history
+
+---
+
+### 🧑‍💼 Admin Dashboard
+
+* View all users
+* Add doctor
+* View system stats:
+
+  * Total users
+  * Total doctors
+  * Total appointments
+
+---
+
+### ⚛️ Frontend (React)
+
+* Login & Register UI
+* Dashboard navigation
+* Book appointment UI
+* View appointments UI
+* Medical records UI
+* Admin dashboard UI
+
+---
+
+### 🧪 Testing
+
+* Jest + Supertest for backend testing
+* Auth API tested
+
+---
+
+### 🐳 Docker (Containerization)
+
+* Backend container
+* Frontend container
+* MongoDB container
+* Multi-service setup using docker-compose
 
 ---
 
 ## 🧰 Tech Stack
 
-### Backend
+### 🌐 Frontend
+
+* React (Vite)
+* Axios
+* React Router DOM
+* Tailwind CSS
+
+### 📦 Additional Frontend Libraries
+
+```bash
+npm install axios react-router-dom react-hot-toast lucide-react jwt-decode clsx tailwind-merge
+npm install -D tailwindcss @tailwindcss/postcss postcss autoprefixer
+```
+
+---
+
+### 🖥 Backend
 
 * Node.js
 * Express.js
 
-### Database
+---
 
-* MongoDB (Atlas)
-
-### Authentication
+### 🔐 Authentication
 
 * JWT (jsonwebtoken)
 * bcryptjs
 
-### Testing Tools
+---
 
-* Postman / Thunder Client
+### 🗄 Database
+
+* MongoDB (Atlas / Docker)
 
 ---
 
-## 📂 Folder Structure
+### 🧪 Testing
 
-backend/
+* Jest
+* Supertest
+
+---
+
+### 🐳 DevOps
+
+* Docker
+* Docker Compose
+
+---
+
+## 📂 Project Structure
+
+```
+hospital-devops-project/
 │
-├── config/
-│   └── db.js
-├── controllers/
-│   ├── authController.js
-│   └── appointmentController.js
-├── middleware/
-│   └── authMiddleware.js
-├── models/
-│   ├── User.js
-│   └── Appointment.js
-├── routes/
-│   ├── authRoutes.js
-│   └── appointmentRoutes.js
-├── server.js
-└── .env
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── tests/
+│   ├── server.js
+│   ├── index.js
+│   └── .env
+│
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│
+├── docker-compose.yml
+├── README.md
+```
 
 ---
 
-## ⚙️ Setup Instructions
+## ⚙️ Local Setup Instructions (Without Docker)
 
-### 1. Clone the Repository
+---
+
+### 🔹 1. Clone Repository
 
 ```bash
 git clone <your-repo-link>
-cd backend
+cd hospital-devops-project
 ```
 
-### 2. Install Dependencies
+---
+
+### 🔹 2. Setup Backend
 
 ```bash
+cd backend
 npm install
 ```
 
-### 3. Setup Environment Variables
+---
 
-Create a `.env` file:
+### 🔹 Create `.env` file
 
 ```env
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
+MONGO_URI=your_mongodb_atlas_uri
 JWT_SECRET=your_secret_key
 ```
 
-### 4. Run the Server
+---
+
+### 🔹 Run Backend
 
 ```bash
 npm run dev
@@ -117,35 +213,104 @@ npm run dev
 
 ---
 
+### 🔹 3. Setup Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+---
+
+### 🔹 Run Frontend
+
+```bash
+npm run dev
+```
+
+---
+
+### 🔹 Open App
+
+```
+http://localhost:5173
+```
+
+---
+
+## 🐳 Docker Setup (Recommended)
+
+---
+
+### 🔹 Update Backend `.env`
+
+```env
+MONGO_URI=mongodb://mongo:27017/hospitalDB
+```
+
+---
+
+### 🔹 Run Project
+
+```bash
+docker-compose up --build
+```
+
+---
+
+### 🔹 Access App
+
+* Frontend → http://localhost:5173
+* Backend → http://localhost:5000
+
+---
+
 ## 🔗 API Endpoints
 
-### 🔐 Auth Routes
+---
 
-| Method | Endpoint           | Description   |
-| ------ | ------------------ | ------------- |
-| POST   | /api/auth/register | Register user |
-| POST   | /api/auth/login    | Login user    |
+### 🔐 Auth
+
+| Method | Endpoint           |
+| ------ | ------------------ |
+| POST   | /api/auth/register |
+| POST   | /api/auth/login    |
 
 ---
 
-### 📅 Appointment Routes
+### 📅 Appointments
 
-| Method | Endpoint                  | Description          |
-| ------ | ------------------------- | -------------------- |
-| POST   | /api/appointments/book    | Book appointment     |
-| GET    | /api/appointments/patient | Patient appointments |
-| GET    | /api/appointments/doctor  | Doctor appointments  |
+| Method | Endpoint                  |
+| ------ | ------------------------- |
+| POST   | /api/appointments/book    |
+| GET    | /api/appointments/patient |
+| GET    | /api/appointments/doctor  |
 
 ---
 
-## 🧪 Testing APIs
+### 🏥 Records
 
-Use tools like:
+| Method | Endpoint                  |
+| ------ | ------------------------- |
+| POST   | /api/records/upload       |
+| POST   | /api/records/prescription |
+| GET    | /api/records/my           |
 
-* Postman
-* Thunder Client
+---
 
-### 🔑 Authorization Header
+### 🧑‍💼 Admin
+
+| Method | Endpoint          |
+| ------ | ----------------- |
+| GET    | /api/admin/users  |
+| POST   | /api/admin/doctor |
+| GET    | /api/admin/stats  |
+
+---
+
+## 🔑 Authentication
+
+All protected routes require:
 
 ```bash
 Authorization: Bearer <JWT_TOKEN>
@@ -155,26 +320,16 @@ Authorization: Bearer <JWT_TOKEN>
 
 ## 🧠 Learning Outcomes
 
-* Built REST APIs using Express
-* Implemented JWT Authentication
-* Connected MongoDB using Mongoose
-* Created protected routes
-* Designed relational data (User ↔ Appointment)
+* Built full-stack MERN application
+* Implemented JWT authentication
+* Designed role-based system
+* Integrated frontend with backend APIs
+* Used Docker for containerization
+* Wrote automated tests using Jest
 
----
-
-## 🚧 Upcoming Features (Next Phases)
-
-* Patient Health Records (EHR)
-* File Upload (Reports & Prescriptions)
-* Docker Containerization
-* Jenkins CI/CD Pipeline
-* Deployment on Cloud
 
 ---
 
 ## 👨‍💻 Author
 
 Mukul
-
----
