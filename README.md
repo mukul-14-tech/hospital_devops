@@ -19,8 +19,6 @@ The project also includes:
 
 ---
 
-## 🚀 Features Implemented (Day 1–10)
-
 ### 🔐 Authentication System
 
 * User Registration (Patient / Doctor / Admin)
