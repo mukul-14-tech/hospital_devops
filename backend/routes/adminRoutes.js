@@ -7,10 +7,13 @@ const {
   getStats
 } = require("../controllers/adminController");
 
-const protect = require("../middleware/authMiddleware");
+const { protect, restrictTo } = require("../middleware/authMiddleware");
 
-router.get("/users", protect, getAllUsers);
-router.post("/doctor", protect, addDoctor);
-router.get("/stats", protect, getStats);
+// All admin routes should be restricted to admin
+router.use(protect, restrictTo("admin"));
+
+router.get("/users", getAllUsers);
+router.post("/doctor", addDoctor);
+router.get("/stats", getStats);
 
 module.exports = router;

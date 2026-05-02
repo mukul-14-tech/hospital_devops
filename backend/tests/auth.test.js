@@ -2,13 +2,15 @@ const request = require("supertest");
 const app = require("../server");
 
 describe("Auth API", () => {
+  const uniqueId = Date.now();
+  const testEmail = `testuser${uniqueId}@test.com`;
 
   it("should register a user", async () => {
     const res = await request(app)
       .post("/api/auth/register")
       .send({
         name: "Test User",
-        email: "testuser@test.com",
+        email: testEmail,
         password: "123456",
         role: "patient"
       });
@@ -21,7 +23,7 @@ describe("Auth API", () => {
     const res = await request(app)
       .post("/api/auth/login")
       .send({
-        email: "testuser@test.com",
+        email: testEmail,
         password: "123456"
       });
 

@@ -4,16 +4,18 @@ const router = express.Router();
 const {
   bookAppointment,
   getPatientAppointments,
-  getDoctorAppointments
+  getDoctorAppointments,
+  updateAppointmentStatus
 } = require("../controllers/appointmentController");
 
-const protect = require("../middleware/authMiddleware");
+const { protect, restrictTo } = require("../middleware/authMiddleware");
 
 // Patient
-router.post("/book", protect, bookAppointment);
-router.get("/patient", protect, getPatientAppointments);
+router.post("/book", protect, restrictTo("patient"), bookAppointment);
+router.get("/patient", protect, restrictTo("patient"), getPatientAppointments);
 
 // Doctor
-router.get("/doctor", protect, getDoctorAppointments);
+router.get("/doctor", protect, restrictTo("doctor"), getDoctorAppointments);
+router.put("/:id/status", protect, restrictTo("doctor"), updateAppointmentStatus);
 
 module.exports = router;
