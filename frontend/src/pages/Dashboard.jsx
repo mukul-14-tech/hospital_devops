@@ -1,13 +1,201 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Stethoscope, CalendarPlus, CalendarDays, TrendingUp, Users, Activity } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
+const THEME_CSS = `
+  :root {
+    --primary: #0d9488;
+    --primary-light: #ccfbf1;
+    --bg-light: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --radius-xl: 20px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+    --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05);
+  }
+
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dash-header {
+    margin-bottom: 2.5rem;
+    color: var(--text-main);
+  }
+
+  .role-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+
+  .dash-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
+  }
+
+  .dash-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 600px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-info p {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-info h4 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 1.5rem;
+  }
+
+  .nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .nav-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+  }
+
+  .nav-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: white;
+  }
+
+  .nav-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    transition: color 0.2s;
+  }
+
+  .nav-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .nav-footer {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  .nav-card:hover h3, .nav-card:hover .nav-footer {
+    color: var(--primary);
+  }
+
+  /* Specific Icon Colors */
+  .bg-blue { background: #3b82f6; }
+  .bg-teal { background: #0d9488; }
+  .bg-purple { background: #8b5cf6; }
+  .bg-rose { background: #f43f5e; }
+  
+  .text-blue { color: #3b82f6; background: #eff6ff; }
+  .text-teal { color: #0d9488; background: #f0fdfa; }
+  .text-rose { color: #f43f5e; background: #fff1f2; }
+  .text-purple { color: #8b5cf6; background: #f5f3ff; }
+`;
+
 function Dashboard() {
   const navigate = useNavigate();
   
-  // Safely decode the token to check the user's role
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = THEME_CSS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+  
   const token = localStorage.getItem("token");
-  let role = "patient"; // fallback
+  let role = "patient"; 
   let userName = "User";
   if (token) {
     try {
@@ -19,84 +207,61 @@ function Dashboard() {
     }
   }
 
-  // Cards specific to Patients
   const patientCards = [
-    { title: "My Records", description: "View your medical history and test results", icon: FileText, path: "/records", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
-    { title: "Book Appointment", description: "Schedule a visit with a specialist", icon: CalendarPlus, path: "/book", gradient: "from-rose-500 to-orange-400", shadow: "shadow-rose-500/20" },
-    { title: "View Appointments", description: "Check your upcoming consultations", icon: CalendarDays, path: "/appointments", gradient: "from-purple-500 to-indigo-400", shadow: "shadow-purple-500/20" },
+    { title: "My Records", description: "View your medical history and test results directly.", icon: FileText, path: "/records", bgClass: "bg-blue" },
+    { title: "Book Appointment", description: "Schedule a visit with a specialist at your convenience.", icon: CalendarPlus, path: "/book", bgClass: "bg-teal" },
+    { title: "View Appointments", description: "Check your upcoming consultations and reschedules.", icon: CalendarDays, path: "/appointments", bgClass: "bg-purple" },
   ];
 
-  // Cards specific to Doctors
   const doctorCards = [
-    { title: "Patient Records", description: "Access detailed patient medical histories", icon: FileText, path: "/records", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
-    { title: "Add Prescription", description: "Issue new prescriptions to patients", icon: Stethoscope, path: "/prescription", gradient: "from-emerald-500 to-teal-400", shadow: "shadow-emerald-500/20" },
-    { title: "My Schedule", description: "Manage your daily appointments", icon: CalendarDays, path: "/appointments", gradient: "from-rose-500 to-orange-400", shadow: "shadow-rose-500/20" },
+    { title: "Patient Records", description: "Access detailed patient medical histories securely.", icon: FileText, path: "/records", bgClass: "bg-blue" },
+    { title: "Add Prescription", description: "Issue new prescriptions to your assigned patients.", icon: Stethoscope, path: "/prescription", bgClass: "bg-teal" },
+    { title: "My Schedule", description: "Manage your daily appointments and availability.", icon: CalendarDays, path: "/appointments", bgClass: "bg-rose" },
   ];
 
   const navCards = role === "doctor" ? doctorCards : patientCards;
 
   return (
-    <div className="max-w-7xl mx-auto animate-fade-in">
-      <header className="mb-10 text-white">
-        <div className="flex items-center space-x-2 mb-2">
-          <div className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium backdrop-blur-sm">
-            {role === 'doctor' ? 'Clinical Dashboard' : 'Patient Portal'}
-          </div>
+    <div className="dashboard-container">
+      <header className="dash-header">
+        <div className="role-badge">
+          {role === 'doctor' ? 'Clinical Dashboard' : 'Patient Portal'}
         </div>
-        <h1 className="text-4xl font-outfit font-bold">
-          Welcome back, {userName}
-        </h1>
-        <p className="mt-2 text-slate-300 max-w-xl">
-          Here's an overview of your healthcare operations and recent activity.
-        </p>
+        <h1>Welcome back, {userName}</h1>
+        <p>Here's an overview of your healthcare operations and recent activity.</p>
       </header>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="stats-grid">
         {[
-          { label: "Upcoming Appts", value: "3", icon: CalendarDays, color: "text-blue-500" },
-          { label: "Recent Records", value: "12", icon: FileText, color: "text-emerald-500" },
-          { label: "Health Score", value: "94%", icon: Activity, color: "text-rose-500" },
-          { label: "Consultations", value: "28", icon: Users, color: "text-purple-500" },
+          { label: "Upcoming Appts", value: "3", icon: CalendarDays, colorClass: "text-blue" },
+          { label: "Recent Records", value: "12", icon: FileText, colorClass: "text-teal" },
+          { label: "Health Score", value: "94%", icon: Activity, colorClass: "text-rose" },
+          { label: "Consultations", value: "28", icon: Users, colorClass: "text-purple" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-              <h4 className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</h4>
+          <div key={i} className="stat-card">
+            <div className="stat-info">
+              <p>{stat.label}</p>
+              <h4>{stat.value}</h4>
             </div>
-            <div className={`h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center ${stat.color}`}>
-              <stat.icon className="h-6 w-6" />
+            <div className={`stat-icon ${stat.colorClass}`}>
+              <stat.icon size={24} />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-between mb-6 mt-12">
-        <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
-      </div>
+      <h2 className="section-title">Quick Actions</h2>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="nav-grid">
         {navCards.map((card, idx) => (
-          <div
-            key={card.title}
-            onClick={() => navigate(card.path)}
-            className="group relative bg-white rounded-2xl p-1 shadow-sm hover:shadow-xl cursor-pointer transition-all duration-300 hover:-translate-y-1"
-            style={{ animationDelay: `${idx * 0.1}s` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300 z-0 pointer-events-none" />
-            
-            <div className="relative bg-white rounded-xl p-6 h-full border border-slate-100 z-10">
-              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} mb-5 shadow-lg ${card.shadow}`}>
-                <card.icon className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-xl font-outfit font-bold text-slate-900 group-hover:text-rose-600 transition-colors">{card.title}</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">{card.description}</p>
-              
-              <div className="mt-6 flex items-center text-sm font-medium text-slate-400 group-hover:text-rose-500 transition-colors">
-                Open Module
-                <TrendingUp className="ml-2 h-4 w-4" />
-              </div>
+          <div key={card.title} onClick={() => navigate(card.path)} className="nav-card">
+            <div className={`nav-icon-wrapper ${card.bgClass}`}>
+              <card.icon size={26} />
+            </div>
+            <h3>{card.title}</h3>
+            <p>{card.description}</p>
+            <div className="nav-footer">
+              Open Module <TrendingUp size={16} style={{ marginLeft: '8px' }} />
             </div>
           </div>
         ))}

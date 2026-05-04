@@ -1,12 +1,251 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut, User as UserIcon, HeartPulse, Bell, Search } from 'lucide-react';
+import { Menu, X, LogOut, HeartPulse, Bell, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const THEME_CSS = `
+  :root {
+    --primary: #0d9488;
+    --primary-hover: #0f766e;
+    --sidebar-bg: #0f172a;
+    --sidebar-border: #1e293b;
+    --sidebar-text: #94a3b8;
+    --sidebar-active-text: #ffffff;
+    --sidebar-active-bg: rgba(13, 148, 136, 0.15);
+    --bg-light: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --sidebar-width: 280px;
+    --header-height: 80px;
+    --radius-md: 12px;
+    --font-main: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .layout-root {
+    display: flex;
+    min-height: 100vh;
+    font-family: var(--font-main);
+    background: var(--bg-light);
+    overflow: hidden;
+  }
+
+  /* --- Mobile Overlay --- */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 20;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  @media (min-width: 1024px) {
+    .mobile-overlay { display: none; }
+  }
+
+  /* --- Sidebar --- */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  @media (min-width: 1024px) {
+    .sidebar {
+      position: static;
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--sidebar-border);
+    background: rgba(15, 23, 42, 0.5);
+  }
+  .brand-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 12px;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  }
+  .brand-text {
+    font-size: 1.5rem; font-weight: 700; color: white; letter-spacing: -0.5px;
+  }
+  .brand-text span { color: var(--primary); }
+  
+  .mobile-close {
+    margin-left: auto; background: none; border: none; color: var(--sidebar-text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .mobile-close:hover { color: white; }
+  @media (min-width: 1024px) { .mobile-close { display: none; } }
+
+  .user-profile {
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .user-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--sidebar-border); border: 2px solid #334155;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 1.25rem;
+  }
+  .user-info p.role { font-size: 0.9rem; font-weight: 600; color: white; text-transform: capitalize; margin-bottom: 2px; }
+  .user-info p.status { font-size: 0.75rem; color: var(--sidebar-text); display: flex; align-items: center; gap: 6px; }
+  .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; }
+
+  .nav-menu {
+    padding: 0 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    flex: 1; overflow-y: auto;
+  }
+  .nav-item {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    padding: 0.85rem 1rem; border-radius: var(--radius-md);
+    font-size: 0.95rem; font-weight: 600; font-family: inherit;
+    color: var(--sidebar-text); background: transparent; border: 1px solid transparent;
+    cursor: pointer; transition: all 0.2s; text-align: left;
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.05); color: white;
+  }
+  .nav-item.active {
+    background: var(--sidebar-active-bg); color: var(--primary);
+    border-color: rgba(13, 148, 136, 0.2);
+  }
+  .nav-indicator {
+    margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--primary);
+  }
+
+  .sidebar-footer { padding: 1.5rem; margin-top: auto; }
+  .help-box {
+    background: rgba(255, 255, 255, 0.03); border: 1px solid var(--sidebar-border);
+    border-radius: var(--radius-md); padding: 1.25rem; text-align: center;
+  }
+  .help-box h4 { font-size: 0.85rem; font-weight: 600; color: white; margin-bottom: 4px; }
+  .help-box p { font-size: 0.75rem; color: var(--sidebar-text); margin-bottom: 1rem; }
+  .btn-support {
+    width: 100%; padding: 0.6rem; background: var(--sidebar-border); color: white;
+    border: none; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; font-family: inherit;
+  }
+  .btn-support:hover { background: #334155; }
+
+  /* --- Main Content Area --- */
+  .main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex flex-wrap overflow */
+  }
+
+  .top-header {
+    height: var(--header-height);
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    z-index: 10;
+  }
+  @media (min-width: 1024px) {
+    .top-header { padding: 0 2.5rem; }
+  }
+
+  .mobile-toggle {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; padding: 0.5rem; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mobile-toggle:hover { background: var(--bg-light); color: var(--text-main); }
+  @media (min-width: 1024px) { .mobile-toggle { display: none; } }
+
+  .search-bar {
+    display: none;
+    align-items: center; gap: 8px;
+    background: var(--bg-light); border: 1px solid var(--border);
+    border-radius: 30px; padding: 0.6rem 1.25rem; width: 350px;
+    transition: all 0.2s;
+  }
+  .search-bar:focus-within {
+    width: 400px; border-color: var(--primary); background: white;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  }
+  @media (min-width: 768px) { .search-bar { display: flex; } }
+
+  .search-input {
+    border: none; background: transparent; outline: none; flex: 1;
+    font-family: inherit; font-size: 0.9rem; color: var(--text-main);
+  }
+  .search-input::placeholder { color: #94a3b8; }
+
+  .header-actions {
+    display: flex; align-items: center; gap: 1rem;
+  }
+
+  .btn-icon {
+    position: relative; background: none; border: none; color: var(--text-muted);
+    cursor: pointer; padding: 0.5rem; border-radius: 50%; transition: all 0.2s;
+  }
+  .btn-icon:hover { background: var(--bg-light); color: var(--text-main); }
+  .notification-dot {
+    position: absolute; top: 4px; right: 4px; width: 8px; height: 8px;
+    background: #ef4444; border-radius: 50%; border: 2px solid var(--bg-card);
+  }
+
+  .header-divider {
+    width: 1px; height: 32px; background: var(--border); display: none;
+  }
+  @media (min-width: 640px) { .header-divider { display: block; } }
+
+  .btn-logout {
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; color: var(--text-muted);
+    font-family: inherit; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius-md); transition: all 0.2s;
+  }
+  .btn-logout:hover { background: #fee2e2; color: #dc2626; }
+  .logout-text { display: none; }
+  @media (min-width: 640px) { .logout-text { display: block; } }
+
+  .page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+  @media (min-width: 640px) { .page-content { padding: 2.5rem; } }
+`;
 
 export default function DashboardLayout({ children, role, navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = THEME_CSS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -15,43 +254,34 @@ export default function DashboardLayout({ children, role, navigation }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans">
-      {/* Mobile Sidebar Overlay */}
+    <div className="layout-root">
+      
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-slate-900/60 backdrop-blur-sm lg:hidden transition-opacity"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="mobile-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-30 w-72 bg-slate-900 text-slate-300 transform transition-all duration-300 ease-in-out lg:static lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl lg:shadow-none border-r border-slate-800
-      `}>
-        <div className="h-20 flex items-center px-8 border-b border-slate-800/50 bg-slate-900/50">
-          <div className="h-10 w-10 bg-gradient-to-br from-rose-500 to-orange-400 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-rose-500/20">
-            <HeartPulse className="h-6 w-6 text-white" />
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="brand-icon">
+            <HeartPulse color="white" size={24} />
           </div>
-          <span className="text-2xl font-outfit font-bold text-white tracking-tight">Health<span className="text-rose-400">OS</span></span>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="h-6 w-6 text-slate-400 hover:text-white" />
+          <span className="brand-text">Medi<span>Care</span></span>
+          <button className="mobile-close" onClick={() => setSidebarOpen(false)}>
+            <X size={24} />
           </button>
         </div>
 
-        <div className="px-6 py-8">
-          <div className="mb-4 flex items-center">
-            <div className="h-12 w-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-white font-bold text-lg">
-              {role.charAt(0).toUpperCase()}
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-white capitalize">{role} Account</p>
-              <p className="text-xs text-slate-500">Active status</p>
-            </div>
+        <div className="user-profile">
+          <div className="user-avatar">
+            {role ? role.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <div className="user-info">
+            <p className="role">{role} Account</p>
+            <p className="status"><span className="status-dot" /> Active status</p>
           </div>
         </div>
 
-        <nav className="px-4 space-y-2 mt-2">
+        <nav className="nav-menu">
           {navigation.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -61,74 +291,58 @@ export default function DashboardLayout({ children, role, navigation }) {
                   navigate(item.path);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
-                }`}
+                className={`nav-item ${isActive ? 'active' : ''}`}
               >
-                <item.icon className={`h-5 w-5 mr-3 transition-colors ${isActive ? 'text-rose-400' : 'text-slate-500 group-hover:text-white'}`} />
+                <item.icon size={20} color={isActive ? "var(--primary)" : "var(--sidebar-text)"} />
                 {item.name}
-                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-rose-400"></div>}
+                {isActive && <div className="nav-indicator" />}
               </button>
             );
           })}
         </nav>
         
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full blur-xl -mr-10 -mt-10"></div>
-            <h4 className="text-sm font-semibold text-white mb-1 relative z-10">Need Help?</h4>
-            <p className="text-xs text-slate-400 mb-3 relative z-10">Contact 24/7 support for assistance.</p>
-            <button className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium rounded-lg transition-colors relative z-10">
-              Contact Support
-            </button>
+        <div className="sidebar-footer">
+          <div className="help-box">
+            <h4>Need Help?</h4>
+            <p>Contact 24/7 support for technical assistance.</p>
+            <button className="btn-support">Contact Support</button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-64 bg-slate-900 z-0"></div>
-        
-        {/* Top Navbar */}
-        <header className="h-20 flex items-center justify-between px-6 lg:px-10 z-10 border-b border-white/10 bg-slate-900/50 backdrop-blur-md">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
-          >
-            <Menu className="h-6 w-6" />
+      <div className="main-wrapper">
+        <header className="top-header">
+          <button className="mobile-toggle" onClick={() => setSidebarOpen(true)}>
+            <Menu size={24} />
           </button>
 
-          <div className="hidden md:flex items-center bg-white/10 border border-white/10 rounded-full px-4 py-2 w-96 transition-all focus-within:w-[28rem] focus-within:bg-white/20 focus-within:border-rose-400/50">
-            <Search className="h-4 w-4 text-slate-300" />
+          <div className="search-bar">
+            <Search size={18} color="#94a3b8" />
             <input 
               type="text" 
               placeholder="Search patients, records..." 
-              className="bg-transparent border-none focus:ring-0 text-white placeholder-slate-400 w-full ml-2 text-sm outline-none"
+              className="search-input"
             />
           </div>
 
-          <div className="flex-1 md:hidden" /> {/* Spacer */}
+          <div style={{ flex: 1 }} className="spacer-mobile" />
 
-          <div className="flex items-center space-x-5">
-            <button className="relative p-2 text-slate-300 hover:text-white rounded-full hover:bg-white/10 transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-900"></span>
+          <div className="header-actions">
+            <button className="btn-icon">
+              <Bell size={20} />
+              <span className="notification-dot" />
             </button>
-            <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-2 text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-            >
-              <LogOut className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:block">Sign out</span>
+            
+            <div className="header-divider" />
+            
+            <button onClick={handleLogout} className="btn-logout">
+              <LogOut size={18} />
+              <span className="logout-text">Sign out</span>
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10 z-10">
+        <main className="page-content">
           {children}
         </main>
       </div>

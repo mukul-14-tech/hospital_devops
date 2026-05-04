@@ -3,12 +3,184 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { CalendarPlus, User, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 
+const THEME_CSS = `
+  :root {
+    --primary: #0d9488;
+    --primary-hover: #0f766e;
+    --bg-light: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+  }
+
+  .booking-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .booking-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .booking-header {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    box-shadow: 0 8px 16px rgba(13, 148, 136, 0.2);
+  }
+
+  .booking-header h2 {
+    font-size: 1.75rem;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .booking-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .booking-body {
+    padding: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.75rem;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    appearance: none;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 1rem;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .loading-box {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-light);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 1rem;
+    background: var(--text-main);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2rem;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    background: #000;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
 function BookAppointment() {
   const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
   const [doctors, setDoctors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(true);
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = THEME_CSS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -54,71 +226,66 @@ function BookAppointment() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 md:p-8 animate-fade-in">
-      <Toaster position="top-right" />
-      
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 px-6 py-8 text-center border-b border-blue-100">
-          <div className="mx-auto bg-blue-500 w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-            <CalendarPlus className="h-6 w-6 text-white" />
+    <div className="booking-container">
+      <div className="booking-card">
+        <div className="booking-header">
+          <div className="header-icon">
+            <CalendarPlus color="white" size={28} />
           </div>
-          <h2 className="text-3xl font-outfit font-bold text-slate-900">Schedule a Visit</h2>
-          <p className="text-sm text-slate-600 mt-2">Book your next consultation securely.</p>
+          <h2>Schedule a Visit</h2>
+          <p>Book your next consultation securely.</p>
         </div>
 
-        <div className="p-6 md:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Select Doctor</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-slate-400" />
-                </div>
+        <div className="booking-body">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Select Specialist</label>
+              <div className="input-wrapper">
+                <User className="input-icon" size={18} />
                 {isLoadingDoctors ? (
-                  <div className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 text-sm flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading doctors...
+                  <div className="loading-box">
+                    <Loader2 className="animate-spin" size={18} style={{ marginRight: '8px' }} /> 
+                    Loading doctors...
                   </div>
                 ) : (
-                  <select
-                    required
-                    value={doctorId}
-                    onChange={(e) => setDoctorId(e.target.value)}
-                    className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm appearance-none bg-white"
-                  >
-                    <option value="" disabled>Choose a specialist...</option>
-                    {doctors.map(doc => (
-                      <option key={doc._id} value={doc._id}>Dr. {doc.name} ({doc.email})</option>
-                    ))}
-                  </select>
+                  <>
+                    <select
+                      required
+                      value={doctorId}
+                      onChange={(e) => setDoctorId(e.target.value)}
+                      className="form-control"
+                    >
+                      <option value="" disabled>Choose a specialist...</option>
+                      {doctors.map(doc => (
+                        <option key={doc._id} value={doc._id}>Dr. {doc.name} ({doc.email})</option>
+                      ))}
+                    </select>
+                    <svg className="select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </>
                 )}
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Preferred Date</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <CalendarIcon className="h-5 w-5 text-slate-400" />
-                </div>
+            <div className="form-group">
+              <label className="form-label">Preferred Date</label>
+              <div className="input-wrapper">
+                <CalendarIcon className="input-icon" size={18} />
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
+                  className="form-control"
                 />
               </div>
             </div>
 
             <button
               type="submit"
+              className="btn-submit"
               disabled={isSubmitting || isLoadingDoctors}
-              className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-70 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 mt-4"
             >
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm Booking"}
+              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Confirm Booking"}
             </button>
           </form>
         </div>

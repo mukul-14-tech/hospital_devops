@@ -4,10 +4,105 @@ import { Calendar, Clock, User, Inbox, Loader2, CheckCircle, XCircle } from "luc
 import { jwtDecode } from "jwt-decode";
 import toast, { Toaster } from "react-hot-toast";
 
+const THEME_CSS = `
+  :root {
+    --primary: #0d9488;
+    --bg-light: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --radius-xl: 20px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05);
+  }
+
+  .page-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-header { margin-bottom: 2.5rem; }
+  .page-title { font-size: 2.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+  .page-desc { color: var(--text-muted); font-size: 1rem; }
+
+  .loading-state, .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 4rem 2rem; background: var(--bg-card); border-radius: var(--radius-xl);
+    border: 2px dashed var(--border); text-align: center;
+  }
+  .empty-icon { color: #cbd5e1; margin-bottom: 1rem; }
+  .empty-state h3 { font-size: 1.1rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.25rem; }
+  .empty-state p { color: var(--text-muted); font-size: 0.9rem; }
+
+  .appt-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;
+  }
+
+  .appt-card {
+    background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);
+    padding: 1.5rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+  }
+  .appt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+  .status-indicator { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+  .status-indicator.confirmed { background: #10b981; }
+  .status-indicator.cancelled { background: #ef4444; }
+  .status-indicator.pending { background: #f59e0b; }
+
+  .appt-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; padding-left: 0.5rem; }
+  
+  .person-info { display: flex; align-items: center; gap: 12px; }
+  .person-avatar {
+    width: 40px; height: 40px; border-radius: 12px; background: #f0fdfa;
+    display: flex; align-items: center; justify-content: center; color: var(--primary);
+  }
+  .person-name { font-weight: 600; color: var(--text-main); font-size: 1rem; }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-confirmed { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+  .badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+  .appt-details { padding-left: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--bg-light); display: flex; flex-direction: column; gap: 0.75rem; }
+  .detail-row { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+  .detail-icon { color: #94a3b8; }
+
+  .action-buttons { display: flex; gap: 0.75rem; padding-left: 0.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--bg-light); }
+  .btn-action {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 0.6rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; border: none; font-family: inherit;
+  }
+  .btn-approve { background: #ecfdf5; color: #059669; }
+  .btn-approve:hover { background: #d1fae5; }
+  .btn-cancel { background: #fef2f2; color: #dc2626; }
+  .btn-cancel:hover { background: #fee2e2; }
+`;
+
 function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
   const [role, setRole] = useState("patient");
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = THEME_CSS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   const fetchAppointments = async () => {
     const token = localStorage.getItem("token");
@@ -53,82 +148,77 @@ function Appointments() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusClass = (status) => {
     const s = status?.toLowerCase() || 'pending';
-    if (s === 'confirmed' || s === 'approved') return "bg-green-100 text-green-800 border-green-200";
-    if (s === 'cancelled') return "bg-red-100 text-red-800 border-red-200";
-    return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    if (s === 'confirmed' || s === 'approved') return "confirmed";
+    if (s === 'cancelled') return "cancelled";
+    return "pending";
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-8 animate-fade-in">
+    <div className="page-container">
       <Toaster position="top-right" />
-      <div className="mb-8">
-        <h1 className="text-3xl font-outfit font-bold text-slate-900">
-          {role === 'doctor' ? "Doctor Schedule" : "My Appointments"}
-        </h1>
-        <p className="text-sm text-slate-500 mt-2">Track your upcoming and past consultations.</p>
+      <div className="page-header">
+        <h1 className="page-title">{role === 'doctor' ? "Doctor Schedule" : "My Appointments"}</h1>
+        <p className="page-desc">Track your upcoming and past consultations.</p>
       </div>
 
       {isFetching ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <div className="loading-state">
+          <Loader2 className="animate-spin" size={32} color="var(--primary)" />
         </div>
       ) : appointments.length === 0 ? (
-        <div className="text-center bg-white border border-dashed border-slate-300 rounded-2xl py-16 shadow-sm">
-          <Inbox className="mx-auto h-12 w-12 text-slate-300" />
-          <h3 className="mt-4 text-sm font-medium text-slate-900">No appointments scheduled</h3>
-          <p className="mt-1 text-sm text-slate-500">You don't have any appointments booked yet.</p>
+        <div className="empty-state">
+          <Inbox className="empty-icon" size={48} />
+          <h3>No appointments scheduled</h3>
+          <p>You don't have any appointments booked yet.</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {appointments.map((appt) => (
-            <div key={appt._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all p-5 relative overflow-hidden group hover:-translate-y-1">
-              <div className={`absolute top-0 left-0 w-1.5 h-full ${
-                (appt.status === 'confirmed' || appt.status === 'approved') ? 'bg-emerald-500' : appt.status === 'cancelled' ? 'bg-red-500' : 'bg-amber-400'
-              }`}></div>
-              
-              <div className="flex justify-between items-start mb-4 pl-3">
-                <div className="flex items-center space-x-3 text-slate-900 font-medium">
-                  <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
-                    <User className="h-4 w-4 text-blue-500" />
+        <div className="appt-grid">
+          {appointments.map((appt) => {
+            const statusClass = getStatusClass(appt.status);
+            return (
+              <div key={appt._id} className="appt-card">
+                <div className={`status-indicator ${statusClass}`} />
+                
+                <div className="appt-header">
+                  <div className="person-info">
+                    <div className="person-avatar">
+                      <User size={20} />
+                    </div>
+                    <span className="person-name">
+                      {role === 'doctor' ? (appt.patient?.name || "Patient") : (appt.doctor?.name || "Doctor")}
+                    </span>
                   </div>
-                  <span>{role === 'doctor' ? (appt.patient?.name || "Patient") : (appt.doctor?.name || "Doctor")}</span>
+                  <span className={`status-badge badge-${statusClass}`}>
+                    {(appt.status || 'Pending')}
+                  </span>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(appt.status)}`}>
-                  {(appt.status || 'Pending').toUpperCase()}
-                </span>
-              </div>
 
-              <div className="space-y-3 pl-3 border-t border-slate-50 pt-4">
-                <div className="flex items-center text-sm text-slate-600 font-medium">
-                  <Calendar className="h-4 w-4 mr-3 text-slate-400" />
-                  {new Date(appt.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                <div className="appt-details">
+                  <div className="detail-row">
+                    <Calendar className="detail-icon" size={16} />
+                    {new Date(appt.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
+                  <div className="detail-row">
+                    <Clock className="detail-icon" size={16} />
+                    {new Date(appt.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-                <div className="flex items-center text-sm text-slate-600 font-medium">
-                  <Clock className="h-4 w-4 mr-3 text-slate-400" />
-                  {new Date(appt.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
 
-              {role === 'doctor' && appt.status === 'pending' && (
-                <div className="mt-5 pl-3 flex space-x-2 border-t border-slate-50 pt-4">
-                  <button 
-                    onClick={() => handleStatusUpdate(appt._id, 'confirmed')}
-                    className="flex-1 flex items-center justify-center py-2 px-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-semibold transition-colors"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1.5" /> Approve
-                  </button>
-                  <button 
-                    onClick={() => handleStatusUpdate(appt._id, 'cancelled')}
-                    className="flex-1 flex items-center justify-center py-2 px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-semibold transition-colors"
-                  >
-                    <XCircle className="h-4 w-4 mr-1.5" /> Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                {role === 'doctor' && appt.status === 'pending' && (
+                  <div className="action-buttons">
+                    <button onClick={() => handleStatusUpdate(appt._id, 'confirmed')} className="btn-action btn-approve">
+                      <CheckCircle size={16} /> Approve
+                    </button>
+                    <button onClick={() => handleStatusUpdate(appt._id, 'cancelled')} className="btn-action btn-cancel">
+                      <XCircle size={16} /> Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
