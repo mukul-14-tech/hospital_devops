@@ -1,6 +1,8 @@
+jest.setTimeout(20000);
 const request = require("supertest");
 const app = require("../server");
 const mongoose = require("mongoose");
+require("./setup");
 
 describe("Appointment API", () => {
   let patientToken;

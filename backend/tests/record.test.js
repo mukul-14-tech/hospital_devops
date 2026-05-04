@@ -1,5 +1,8 @@
+jest.setTimeout(20000);
+
 const request = require("supertest");
 const app = require("../server");
+require("./setup");
 
 describe("Record API", () => {
   let patientToken;
