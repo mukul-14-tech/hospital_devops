@@ -10,7 +10,7 @@ pipeline {
         stage('Install Backend Dependencies') {
             steps {
                 dir('backend') {
-                    sh 'npm install'
+                    bat 'npm install'
                 }
             }
         }
@@ -20,9 +20,10 @@ pipeline {
                 MONGO_URI = 'mongodb://127.0.0.1:27017/hospitalDB'
                 JWT_SECRET = 'secret123'
             }
+
             steps {
                 dir('backend') {
-                    sh 'npm test || true'
+                    bat 'npm test || exit 0'
                 }
             }
         }
@@ -30,20 +31,20 @@ pipeline {
         stage('Install Frontend') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
+                    bat 'npm install'
                 }
             }
         }
 
         stage('Build Docker') {
             steps {
-                sh 'docker-compose build'
+                bat 'docker compose build'
             }
         }
 
         stage('Run Containers') {
             steps {
-                sh 'docker-compose up -d'
+                bat 'docker compose up -d'
             }
         }
 
