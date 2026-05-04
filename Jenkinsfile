@@ -16,6 +16,10 @@ pipeline {
         }
 
         stage('Run Tests') {
+            environment {
+                MONGO_URI = 'mongodb://127.0.0.1:27017/hospitalDB'
+                JWT_SECRET = 'secret123'
+            }
             steps {
                 dir('backend') {
                     sh 'npm test || true'
