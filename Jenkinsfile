@@ -52,5 +52,23 @@ pipeline {
             }
         }
 
+        stage('Fix Prometheus Setup') {
+            steps {
+                sh '''
+                rm -rf prometheus
+                mkdir prometheus
+                cat <<EOF > prometheus/prometheus.yml
+        global:
+        scrape_interval: 15s
+
+        scrape_configs:
+        - job_name: 'node'
+            static_configs:
+            - targets: ['localhost:9090']
+        EOF
+                '''
+            }
+        }
+
     }
 }
