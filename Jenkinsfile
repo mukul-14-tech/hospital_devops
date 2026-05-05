@@ -28,6 +28,19 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'sonar-scanner'
+            }
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                    ${scannerHome}/bin/sonar-scanner
+                    '''
+                }
+            }
+        }
+
         stage('Install Frontend') {
             steps {
                 dir('frontend') {
