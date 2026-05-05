@@ -1,4 +1,4 @@
-jest.setTimeout(20000);
+jest.setTimeout(10000);
 
 const request = require("supertest");
 const app = require("../server");
