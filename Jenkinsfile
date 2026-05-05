@@ -18,7 +18,7 @@ pipeline {
         stage('Run Tests') {
             environment {
                 NODE_ENV = 'test'
-                MONGO_URI = 'mongodb://172.18.0.2:27017/hospitalDB'
+                MONGO_URI = 'mongodb://mongo:27017/hospitalDB'
                 JWT_SECRET = 'secret123'
             }
             steps {
@@ -34,9 +34,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    ${scannerHome}/bin/sonar-scanner
-                    '''
+                    sh "${scannerHome}/bin/sonar-scanner"
                 }
             }
         }
@@ -49,6 +47,24 @@ pipeline {
             }
         }
 
+        stage('Fix Prometheus Setup') {
+            steps {
+                sh '''
+                rm -rf prometheus
+                mkdir prometheus
+                cat <<EOF > prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9090']
+EOF
+                '''
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 sh 'docker-compose build'
@@ -56,30 +72,12 @@ pipeline {
         }
 
         stage('Run Containers') {
-             environment {
-                MONGO_URI = 'mongodb://172.18.0.2:27017/hospitalDB'
+            environment {
+                MONGO_URI = 'mongodb://mongo:27017/hospitalDB'
                 JWT_SECRET = 'secret123'
             }
             steps {
                 sh 'docker-compose up -d'
-            }
-        }
-
-        stage('Fix Prometheus Setup') {
-            steps {
-                sh '''
-                rm -rf prometheus
-                mkdir prometheus
-                cat <<EOF > prometheus/prometheus.yml
-        global:
-        scrape_interval: 15s
-
-        scrape_configs:
-        - job_name: 'node'
-            static_configs:
-            - targets: ['localhost:9090']
-        EOF
-                '''
             }
         }
 
