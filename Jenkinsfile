@@ -18,7 +18,7 @@ pipeline {
         stage('Run Tests') {
             environment {
                 NODE_ENV = 'test'
-                MONGO_URI = 'mongodb://mongo:27017/hospitalDB'
+                MONGO_URI = 'mongodb://172.18.0.2:27017/hospitalDB'
                 JWT_SECRET = 'secret123'
             }
             steps {
@@ -73,7 +73,7 @@ EOF
 
         stage('Run Containers') {
             environment {
-                MONGO_URI = 'mongodb://mongo:27017/hospitalDB'
+                MONGO_URI = 'mongodb://172.18.0.2:27017/hospitalDB'
                 JWT_SECRET = 'secret123'
             }
             steps {
