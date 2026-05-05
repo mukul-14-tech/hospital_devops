@@ -43,6 +43,10 @@ pipeline {
         }
 
         stage('Run Containers') {
+             environment {
+                MONGO_URI = 'mongodb://172.18.0.2:27017/hospitalDB'
+                JWT_SECRET = 'secret123'
+            }
             steps {
                 sh 'docker-compose up -d'
             }

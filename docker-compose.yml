@@ -6,8 +6,9 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
-    env_file:
-      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://devops-mongo-1:27017/hospitalDB
+      - JWT_SECRET=secret123
     depends_on:
       mongo:
         condition: service_healthy
